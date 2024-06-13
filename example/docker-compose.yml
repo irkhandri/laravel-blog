@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mysql:latest
+    container_name: db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: laravel_db
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: secret
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - laravel
+
+  app:
+    image: shinsenter/laravel:latest
+    container_name: laravel_app
+    ports: 
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: laravel_db
+      DB_USERNAME: laravel_user
+      DB_PASSWORD: secret
+    networks:
+      - laravel
+    entrypoint: sh -c "./wait-for-it.sh db:3306 -- php artisan migrate && php artisan serve --host=0.0.0.0 --port=8000"
+
+    # entrypoint: ["/bin/sh", "-c"]
+    # command: >
+    #   "php -S 0.0.0.0:8000 -t public "
+    # command: >
+    #   "
+    #   php -S 0.0.0.0:8000 -t public 
+    #   "
+
+volumes:
+  dbdata:
+
+networks:
+  laravel:
